@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      academic_works: {
+        Row: {
+          abstract: string
+          advisor: string
+          author: string
+          created_at: string
+          id: string
+          keywords: string[]
+          pdf_url: string | null
+          program: string
+          title: string
+          type: Database["public"]["Enums"]["work_type"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          abstract: string
+          advisor: string
+          author: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          pdf_url?: string | null
+          program: string
+          title: string
+          type: Database["public"]["Enums"]["work_type"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          abstract?: string
+          advisor?: string
+          author?: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          pdf_url?: string | null
+          program?: string
+          title?: string
+          type?: Database["public"]["Enums"]["work_type"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +67,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      work_type: "Dissertação" | "Tese"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +194,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      work_type: ["Dissertação", "Tese"],
+    },
   },
 } as const

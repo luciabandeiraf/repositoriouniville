@@ -9,16 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { programs, years } from "@/data/mockData";
+import { programs, years } from "@/data/filterOptions";
+import { Filters } from "@/hooks/useAcademicWorks";
 
 interface SearchFiltersProps {
-  filters: {
-    title: string;
-    author: string;
-    program: string;
-    year: string;
-    keywords: string;
-  };
+  filters: Filters;
   onFilterChange: (key: string, value: string) => void;
   onClearFilters: () => void;
 }

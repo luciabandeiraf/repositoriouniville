@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import SearchFilters from "@/components/SearchFilters";
 import ResultsSection from "@/components/ResultsSection";
 import WorkDetail from "@/components/WorkDetail";
 import Footer from "@/components/Footer";
-import { mockWorks, AcademicWork } from "@/data/mockData";
+import { useAcademicWorks, useTotalWorksCount, AcademicWork, Filters } from "@/hooks/useAcademicWorks";
 
 const Index = () => {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     title: "",
     author: "",
     program: "",
@@ -17,6 +17,9 @@ const Index = () => {
 
   const [selectedWork, setSelectedWork] = useState<AcademicWork | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const { data: works = [], isLoading, isError } = useAcademicWorks(filters);
+  const { data: totalCount = 0 } = useTotalWorksCount();
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -42,42 +45,6 @@ const Index = () => {
     setTimeout(() => setSelectedWork(null), 200);
   };
 
-  const filteredWorks = useMemo(() => {
-    return mockWorks.filter((work) => {
-      const matchesTitle =
-        !filters.title ||
-        work.title.toLowerCase().includes(filters.title.toLowerCase());
-
-      const matchesAuthor =
-        !filters.author ||
-        work.author.toLowerCase().includes(filters.author.toLowerCase());
-
-      const matchesProgram =
-        !filters.program ||
-        filters.program === "all" ||
-        work.program === filters.program;
-
-      const matchesYear =
-        !filters.year ||
-        filters.year === "all" ||
-        work.year.toString() === filters.year;
-
-      const matchesKeywords =
-        !filters.keywords ||
-        work.keywords.some((keyword) =>
-          keyword.toLowerCase().includes(filters.keywords.toLowerCase())
-        );
-
-      return (
-        matchesTitle &&
-        matchesAuthor &&
-        matchesProgram &&
-        matchesYear &&
-        matchesKeywords
-      );
-    });
-  }, [filters]);
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -87,9 +54,11 @@ const Index = () => {
         onClearFilters={handleClearFilters}
       />
       <ResultsSection
-        works={filteredWorks}
+        works={works}
         onSelectWork={handleSelectWork}
-        totalCount={mockWorks.length}
+        totalCount={totalCount}
+        isLoading={isLoading}
+        isError={isError}
       />
       <WorkDetail
         work={selectedWork}
