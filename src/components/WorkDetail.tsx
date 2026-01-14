@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AcademicWork } from "@/data/mockData";
-import { User, GraduationCap, Calendar, Download, BookOpen, X } from "lucide-react";
+import { AcademicWork } from "@/hooks/useAcademicWorks";
+import { User, GraduationCap, Calendar, Download, BookOpen } from "lucide-react";
 
 interface WorkDetailProps {
   work: AcademicWork | null;

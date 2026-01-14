@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AcademicWork } from "@/data/mockData";
+import { AcademicWork } from "@/hooks/useAcademicWorks";
 import { User, GraduationCap, Calendar } from "lucide-react";
 
 interface WorkCardProps {
