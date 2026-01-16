@@ -1,4 +1,5 @@
 import { BookOpen } from "lucide-react";
+import logoUnivlle from "@/assets/logo-univille.png";
 
 const Header = () => {
   return (
@@ -6,7 +7,7 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-4">
           <img
-            src="https://www.univille.edu.br/community/novoportal/images/marca_vertical.svg"
+            src={logoUnivlle}
             alt="Logo Univille"
             className="h-14 w-auto"
           />
