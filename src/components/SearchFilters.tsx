@@ -9,8 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { programs, years } from "@/data/filterOptions";
-import { Filters } from "@/hooks/useAcademicWorks";
+import { programs } from "@/data/filterOptions";
+import { Filters, useDistinctYears } from "@/hooks/useAcademicWorks";
 
 interface SearchFiltersProps {
   filters: Filters;
@@ -19,6 +19,8 @@ interface SearchFiltersProps {
 }
 
 const SearchFilters = ({ filters, onFilterChange, onClearFilters }: SearchFiltersProps) => {
+  const { data: years = [] } = useDistinctYears();
+
   return (
     <section className="bg-secondary/50 border-b border-border">
       <div className="container mx-auto px-4 py-8">
