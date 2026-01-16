@@ -53,20 +53,15 @@ export const useAcademicWorks = (filters: Filters) => {
         query = query.eq("year", parseInt(filters.year));
       }
 
-      // Apply keywords filter using array contains
-      if (filters.keywords) {
-        query = query.contains("keywords", [filters.keywords.toLowerCase()]);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // Additional client-side filtering for partial keyword matches
       let results = data as AcademicWork[];
       
+      // Client-side filtering for partial keyword matches (case-insensitive)
       if (filters.keywords) {
-        const keywordSearch = filters.keywords.toLowerCase();
+        const keywordSearch = filters.keywords.toLowerCase().trim();
         results = results.filter((work) =>
           work.keywords.some((keyword) =>
             keyword.toLowerCase().includes(keywordSearch)
