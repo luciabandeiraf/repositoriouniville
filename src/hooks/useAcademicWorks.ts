@@ -101,3 +101,21 @@ export const useTotalWorksCount = () => {
     },
   });
 };
+
+export const useDistinctYears = () => {
+  return useQuery({
+    queryKey: ["academic-works-years"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("academic_works")
+        .select("year")
+        .order("year", { ascending: false });
+
+      if (error) throw error;
+
+      // Extract unique years
+      const uniqueYears = [...new Set(data.map((item) => item.year))];
+      return uniqueYears;
+    },
+  });
+};
