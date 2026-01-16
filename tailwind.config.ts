@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        serif: ['Merriweather', 'Georgia', 'serif'],
+        heading: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
         sans: ['Source Sans 3', 'system-ui', 'sans-serif'],
       },
       colors: {
