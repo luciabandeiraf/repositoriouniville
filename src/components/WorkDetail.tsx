@@ -96,12 +96,17 @@ const WorkDetail = ({ work, isOpen, onClose }: WorkDetailProps) => {
             </p>
           </div>
 
-          <div className="pt-4 border-t border-border">
-            <Button className="w-full sm:w-auto gap-2">
-              <Download className="h-4 w-4" />
-              Download do PDF Completo
-            </Button>
-          </div>
+          {work.pdf_url && (
+            <div className="pt-4 border-t border-border">
+              <Button 
+                className="w-full sm:w-auto gap-2"
+                onClick={() => window.open(work.pdf_url!, '_blank')}
+              >
+                <Download className="h-4 w-4" />
+                Download do PDF Completo
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
