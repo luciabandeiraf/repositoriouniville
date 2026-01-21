@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Upload, FileText, Loader2 } from "lucide-react";
 import { programs } from "@/data/filterOptions";
 
 type WorkType = "Dissertação" | "Tese";
@@ -46,11 +46,45 @@ const initialFormData: FormData = {
 const AcademicWorkForm = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [newKeyword, setNewKeyword] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const uploadPdf = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `pdfs/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("academic-pdfs")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from("academic-pdfs")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const createMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: FormData & { file: File | null }) => {
+      let pdfUrl: string | null = null;
+
+      if (data.file) {
+        setIsUploading(true);
+        try {
+          pdfUrl = await uploadPdf(data.file);
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
       const { error } = await supabase.from("academic_works").insert({
         title: data.title,
         type: data.type,
@@ -60,7 +94,7 @@ const AcademicWorkForm = () => {
         program: data.program,
         keywords: data.keywords,
         abstract: data.abstract,
-        pdf_url: data.pdf_url || null,
+        pdf_url: pdfUrl,
       });
 
       if (error) throw error;
@@ -71,6 +105,10 @@ const AcademicWorkForm = () => {
         description: "O trabalho acadêmico foi cadastrado com sucesso.",
       });
       setFormData(initialFormData);
+      setPdfFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       queryClient.invalidateQueries({ queryKey: ["academic-works"] });
       queryClient.invalidateQueries({ queryKey: ["academic-works-count"] });
       queryClient.invalidateQueries({ queryKey: ["academic-works-years"] });
@@ -121,6 +159,29 @@ const AcademicWorkForm = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione apenas arquivos PDF.",
+          variant: "destructive",
+        });
+        e.target.value = "";
+        return;
+      }
+      setPdfFile(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setPdfFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -133,7 +194,7 @@ const AcademicWorkForm = () => {
       return;
     }
 
-    createMutation.mutate(formData);
+    createMutation.mutate({ ...formData, file: pdfFile });
   };
 
   // Generate year options (last 30 years)
@@ -297,26 +358,70 @@ const AcademicWorkForm = () => {
             />
           </div>
 
-          {/* URL do PDF */}
+          {/* Upload do PDF */}
           <div className="space-y-2">
-            <Label htmlFor="pdf_url">URL do PDF (opcional)</Label>
-            <Input
-              id="pdf_url"
-              name="pdf_url"
-              type="url"
-              value={formData.pdf_url}
-              onChange={handleInputChange}
-              placeholder="https://exemplo.com/arquivo.pdf"
-            />
+            <Label htmlFor="pdf_file">Arquivo PDF (opcional)</Label>
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                id="pdf_file"
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              
+              {!pdfFile ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-24 border-dashed border-2 flex flex-col gap-2"
+                >
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    Clique para selecionar um arquivo PDF
+                  </span>
+                </Button>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{pdfFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemoveFile}
+                    className="flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Botão de Envio */}
           <Button
             type="submit"
             className="w-full"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || isUploading}
           >
-            {createMutation.isPending ? "Cadastrando..." : "Cadastrar Trabalho"}
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando PDF...
+              </>
+            ) : createMutation.isPending ? (
+              "Cadastrando..."
+            ) : (
+              "Cadastrar Trabalho"
+            )}
           </Button>
         </form>
       </CardContent>
