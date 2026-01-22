@@ -4,7 +4,9 @@ import SearchFilters from "@/components/SearchFilters";
 import ResultsSection from "@/components/ResultsSection";
 import WorkDetail from "@/components/WorkDetail";
 import Footer from "@/components/Footer";
-import { useAcademicWorks, useTotalWorksCount, AcademicWork, Filters } from "@/hooks/useAcademicWorks";
+import { useAcademicWorks, AcademicWork, Filters } from "@/hooks/useAcademicWorks";
+
+const PAGE_SIZE = 20;
 
 const Index = () => {
   const [filters, setFilters] = useState<Filters>({
@@ -15,14 +17,15 @@ const Index = () => {
     keywords: "",
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedWork, setSelectedWork] = useState<AcademicWork | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const { data: works = [], isLoading, isError } = useAcademicWorks(filters);
-  const { data: totalCount = 0 } = useTotalWorksCount();
+  const { data: result, isLoading, isError } = useAcademicWorks(filters, { page: currentPage, pageSize: PAGE_SIZE });
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleClearFilters = () => {
@@ -33,6 +36,12 @@ const Index = () => {
       year: "",
       keywords: "",
     });
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectWork = (work: AcademicWork) => {
@@ -54,11 +63,14 @@ const Index = () => {
         onClearFilters={handleClearFilters}
       />
       <ResultsSection
-        works={works}
+        works={result?.data ?? []}
         onSelectWork={handleSelectWork}
-        totalCount={totalCount}
+        totalCount={result?.totalCount ?? 0}
         isLoading={isLoading}
         isError={isError}
+        currentPage={result?.currentPage ?? 1}
+        totalPages={result?.totalPages ?? 1}
+        onPageChange={handlePageChange}
       />
       <WorkDetail
         work={selectedWork}
