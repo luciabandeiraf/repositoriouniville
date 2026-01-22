@@ -24,6 +24,18 @@ export interface Filters {
   keywords: string;
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface PaginatedResult {
+  data: AcademicWork[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
 // Helper function to normalize text for comparison (removes accents)
 const normalizeText = (text: string): string => {
   return text
@@ -32,32 +44,48 @@ const normalizeText = (text: string): string => {
     .replace(/[\u0300-\u036f]/g, "");
 };
 
-export const useAcademicWorks = (filters: Filters) => {
+export const useAcademicWorks = (filters: Filters, pagination: PaginationParams = { page: 1, pageSize: 20 }) => {
   return useQuery({
-    queryKey: ["academic-works", filters],
-    queryFn: async () => {
-      let query = supabase
+    queryKey: ["academic-works", filters, pagination],
+    queryFn: async (): Promise<PaginatedResult> => {
+      // First, get the total count with filters applied
+      let countQuery = supabase
+        .from("academic_works")
+        .select("*", { count: "exact", head: true });
+
+      // Apply program filter
+      if (filters.program && filters.program !== "all") {
+        countQuery = countQuery.eq("program", filters.program);
+      }
+
+      // Apply year filter
+      if (filters.year && filters.year !== "all") {
+        countQuery = countQuery.eq("year", parseInt(filters.year));
+      }
+
+      // Get all data for client-side filtering (we need this for text searches)
+      let dataQuery = supabase
         .from("academic_works")
         .select("*")
-        .order("year", { ascending: false });
+        .order("created_at", { ascending: false });
 
-      // Apply program filter (exact match)
+      // Apply program filter
       if (filters.program && filters.program !== "all") {
-        query = query.eq("program", filters.program);
+        dataQuery = dataQuery.eq("program", filters.program);
       }
 
-      // Apply year filter (exact match)
+      // Apply year filter
       if (filters.year && filters.year !== "all") {
-        query = query.eq("year", parseInt(filters.year));
+        dataQuery = dataQuery.eq("year", parseInt(filters.year));
       }
 
-      const { data, error } = await query;
+      const { data, error } = await dataQuery;
 
       if (error) throw error;
 
       let results = data as AcademicWork[];
       
-      // Client-side filtering for partial title matches (case-insensitive, accent-insensitive)
+      // Client-side filtering for partial title matches
       if (filters.title) {
         const titleSearch = normalizeText(filters.title.trim());
         results = results.filter((work) =>
@@ -65,7 +93,7 @@ export const useAcademicWorks = (filters: Filters) => {
         );
       }
 
-      // Client-side filtering for partial author matches (case-insensitive, accent-insensitive)
+      // Client-side filtering for partial author matches
       if (filters.author) {
         const authorSearch = normalizeText(filters.author.trim());
         results = results.filter((work) =>
@@ -73,7 +101,7 @@ export const useAcademicWorks = (filters: Filters) => {
         );
       }
 
-      // Client-side filtering for partial keyword matches (case-insensitive, accent-insensitive)
+      // Client-side filtering for partial keyword matches
       if (filters.keywords) {
         const keywordSearch = normalizeText(filters.keywords.trim());
         results = results.filter((work) =>
@@ -83,7 +111,21 @@ export const useAcademicWorks = (filters: Filters) => {
         );
       }
 
-      return results;
+      // Calculate pagination
+      const totalCount = results.length;
+      const totalPages = Math.ceil(totalCount / pagination.pageSize);
+      const startIndex = (pagination.page - 1) * pagination.pageSize;
+      const endIndex = startIndex + pagination.pageSize;
+      
+      // Paginate results
+      const paginatedData = results.slice(startIndex, endIndex);
+
+      return {
+        data: paginatedData,
+        totalCount,
+        totalPages,
+        currentPage: pagination.page,
+      };
     },
   });
 };
