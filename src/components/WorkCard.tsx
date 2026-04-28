@@ -34,11 +34,11 @@ const WorkCard = ({ work, onClick }: WorkCardProps) => {
       <CardContent className="space-y-3">
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="h-4 w-4 shrink-0" />
+            <GraduationCap className="h-4 w-4 shrink-0" />
             <span className="truncate">{work.author}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <GraduationCap className="h-4 w-4 shrink-0" />
+            <User className="h-4 w-4 shrink-0" />
             <span className="truncate">{work.advisor}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
