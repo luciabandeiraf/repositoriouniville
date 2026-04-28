@@ -1,20 +1,36 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import AcademicWorkForm from "@/components/admin/AcademicWorkForm";
 import logo from "@/assets/logo-univille.png";
 
 const Admin = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useIsAdmin();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const loading = authLoading || roleLoading;
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       navigate("/admin/login");
+      return;
     }
-  }, [user, loading, navigate]);
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Sua conta não tem permissão de administrador.",
+        variant: "destructive",
+      });
+      signOut().finally(() => navigate("/admin/login"));
+    }
+  }, [user, isAdmin, loading, navigate, signOut, toast]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,7 +45,7 @@ const Admin = () => {
     );
   }
 
-  if (!user) {
+  if (!user || !isAdmin) {
     return null;
   }
 
