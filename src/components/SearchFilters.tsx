@@ -64,6 +64,19 @@ const SearchFilters = ({ filters, onFilterChange, onClearFilters }: SearchFilter
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="advisor" className="text-sm font-medium">
+              Orientador(a)
+            </Label>
+            <Input
+              id="advisor"
+              placeholder="Buscar por orientador(a)..."
+              value={filters.advisor}
+              onChange={(e) => onFilterChange("advisor", e.target.value)}
+              className="bg-background"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="program" className="text-sm font-medium">
               Programa de Pós-Graduação
             </Label>

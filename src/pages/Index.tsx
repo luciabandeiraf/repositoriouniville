@@ -12,6 +12,7 @@ const Index = () => {
   const [filters, setFilters] = useState<Filters>({
     title: "",
     author: "",
+    advisor: "",
     program: "",
     year: "",
     keywords: "",
@@ -32,6 +33,7 @@ const Index = () => {
     setFilters({
       title: "",
       author: "",
+      advisor: "",
       program: "",
       year: "",
       keywords: "",

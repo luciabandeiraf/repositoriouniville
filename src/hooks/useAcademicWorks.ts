@@ -19,6 +19,7 @@ export interface AcademicWork {
 export interface Filters {
   title: string;
   author: string;
+  advisor: string;
   program: string;
   year: string;
   keywords: string;
@@ -98,6 +99,14 @@ export const useAcademicWorks = (filters: Filters, pagination: PaginationParams 
         const authorSearch = normalizeText(filters.author.trim());
         results = results.filter((work) =>
           normalizeText(work.author).includes(authorSearch)
+        );
+      }
+
+      // Client-side filtering for partial advisor matches
+      if (filters.advisor) {
+        const advisorSearch = normalizeText(filters.advisor.trim());
+        results = results.filter((work) =>
+          normalizeText(work.advisor).includes(advisorSearch)
         );
       }
 
